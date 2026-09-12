@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TCP握手序号大挑战 - 填空游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        .fill-item {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 10px;
+        }
+        .fill-text {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .fill-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        .fill-input:focus {
+            outline: none;
+            border-color: #f5576c;
+        }
+        .check-btn {
+            display: block;
+            margin: 30px auto 0;
+            padding: 15px 40px;
+            background: #f5576c;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .check-btn:hover {
+            background: #e0465a;
+        }
+        .result {
+            text-align: center;
+            font-size: 24px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .correct {
+            color: #4caf50;
+        }
+        .wrong {
+            color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>TCP握手序号大挑战</h1>
+        <div id="fill-container"></div>
+        <button class="check-btn" onclick="checkAnswers()">提交答案</button>
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        const fillItems = [{"text": "TCP建立连接需要进行______次握手", "answer": "3"}, {"text": "第一次握手客户端发送______报文", "answer": "SYN"}, {"text": "第二次握手服务端回复______报文", "answer": "SYN+ACK"}, {"text": "第三次握手客户端回复______报文", "answer": "ACK"}, {"text": "SYN报文本身会占用一个______", "answer": "序号"}];
+        
+        function loadFillItems() {
+            const container = document.getElementById('fill-container');
+            let html = '';
+            
+            fillItems.forEach((item, index) => {
+                html += `
+                    <div class="fill-item">
+                        <div class="fill-text">${index + 1}. ${item.text}</div>
+                        <input type="text" class="fill-input" data-answer="${item.answer}" placeholder="请输入答案">
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function checkAnswers() {
+            const inputs = document.querySelectorAll('.fill-input');
+            let correctCount = 0;
+            
+            inputs.forEach(input => {
+                const userAnswer = input.value.trim();
+                const correctAnswer = input.dataset.answer;
+                
+                if (userAnswer === correctAnswer) {
+                    input.style.borderColor = '#4caf50';
+                    input.style.backgroundColor = '#e8f5e9';
+                    correctCount++;
+                } else {
+                    input.style.borderColor = '#f44336';
+                    input.style.backgroundColor = '#ffebee';
+                }
+            });
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `答对 ${correctCount}/${fillItems.length} 题`;
+            resultDiv.className = 'result ' + (correctCount === fillItems.length ? 'correct' : 'wrong');
+        }
+        
+        loadFillItems();
+    </script>
+</body>
+</html>

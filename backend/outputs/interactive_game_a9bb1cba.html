@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TCP握手序号大挑战 - 互动答题游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #87CEEB 0%, #F0F8FF 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+        .header {
+            background: linear-gradient(135deg, #0066CC 0%, #004080 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 15px 15px 0 0;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .score-display {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .question {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            border-left: 4px solid #0066CC;
+        }
+        .question-number {
+            font-size: 14px;
+            color: #0066CC;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .question-text {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: bold;
+            line-height: 1.6;
+        }
+        .question-type {
+            display: inline-block;
+            background: #0066CC;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        .input-area {
+            margin-bottom: 20px;
+        }
+        .input-field {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .option {
+            padding: 12px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+        .option:hover {
+            background: #f0f0f0;
+            border-color: #0066CC;
+        }
+        .option.selected {
+            background: #0066CC;
+            color: white;
+            border-color: #0066CC;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #0066CC 0%, #004080 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+        .submit-btn:hover {
+            opacity: 0.9;
+        }
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .explanation {
+            padding: 15px;
+            background: #fff9c4;
+            border-left: 4px solid #ffc107;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+        .explanation.show {
+            display: block;
+        }
+        .explanation-title {
+            font-weight: bold;
+            color: #ff6f00;
+            margin-bottom: 8px;
+        }
+        .explanation-content {
+            color: #333;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        .knowledge-ref {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+            font-style: italic;
+        }
+        .feedback {
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+            font-weight: bold;
+            text-align: center;
+        }
+        .feedback.correct {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #28a745;
+        }
+        .feedback.wrong {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #dc3545;
+        }
+        .feedback.show {
+            display: block;
+        }
+        .reset-btn {
+            width: 100%;
+            padding: 15px;
+            background: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+        .reset-btn:hover {
+            background: #f57c00;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>TCP握手序号大挑战</h1>
+            <div class="score-display">当前得分：<span id="current-score">0</span> / <span id="total-score">30</span></div>
+        </div>
+        <div id="quiz-container"></div>
+        <button class="reset-btn hidden" id="reset-btn" onclick="resetGame()">重新开始</button>
+    </div>
+
+    <script>
+        const questions = [{"type": "choice", "question": "TCP三次握手的第一次握手，客户端发送什么报文？", "options": ["A. SYN", "B. SYN+ACK", "C. ACK", "D. FIN"], "answer": "0", "explanation": "SYN报文用于同步序号，请求建立TCP连接。这是三次握手的第一个步骤。", "knowledge_ref": "参考资料：TCP三次握手-SYN报文"}, {"type": "calculation", "question": "客户端初始seq=100，发送SYN报文给服务器，服务器回复的ack值是？", "answer": "101", "explanation": "ack = 对方seq + 1，SYN报文占用一个序号，所以ack = 100 + 1 = 101。", "knowledge_ref": "参考资料：TCP序号计算规则"}, {"type": "choice", "question": "TCP使用三次握手建立连接，最主要目的是？", "options": ["A. 加快传输速度", "B. 防止失效历史报文建立无效连接，节约服务端资源", "C. 加密传输数据", "D. 校验传输文件完整性"], "answer": "1", "explanation": "三次握手的主要目的是防止网络中滞留的过期历史连接报文导致服务器无端建立无效连接，浪费服务器资源。", "knowledge_ref": "参考资料：TCP三次握手设计目的"}];
+        let currentQuestion = 0;
+        let score = 0;
+        let totalScore = 30;
+        let answered = false;
+
+        function loadQuestion() {
+            const container = document.getElementById('quiz-container');
+            const question = questions[currentQuestion];
+            
+            let html = `
+                <div class="question">
+                    <div class="question-number">第 ${currentQuestion + 1} / ${questions.length} 题</div>
+                    <span class="question-type">${question.type === 'choice' ? '单选题' : '计算题'}</span>
+                    <div class="question-text">${question.question}</div>
+            `;
+            
+            if (question.type === 'choice') {
+                html += `
+                    <div class="options">
+            `;
+                question.options.forEach((option, index) => {
+                    html += `<div class="option" onclick="selectOption(this, ${index})">${option}</div>`;
+                });
+                html += `
+                    </div>
+                <div class="input-area">
+                    <button class="submit-btn" onclick="submitChoice()" id="submit-btn" disabled>提交答案</button>
+                </div>
+            `;
+            } else if (question.type === 'calculation') {
+                html += `
+                    <div class="input-area">
+                        <input type="number" class="input-field" id="answer-input" placeholder="请输入答案（数字）">
+                        <button class="submit-btn" onclick="submitCalculation()" id="submit-btn">提交答案</button>
+                    </div>
+                `;
+            }
+            
+            html += `
+                    <div class="feedback" id="feedback"></div>
+                    <div class="explanation" id="explanation">
+                        <div class="explanation-title">解析：</div>
+                        <div class="explanation-content">${question.explanation}</div>
+                        <div class="knowledge-ref">${question.knowledge_ref || ''}</div>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+            answered = false;
+        }
+        
+        function selectOption(element, index) {
+            if (answered) return;
+            
+            // 清除其他选项的选中状态
+            document.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            
+            // 启用提交按钮
+            document.getElementById('submit-btn').disabled = false;
+            document.getElementById('submit-btn').dataset.selected = index;
+        }
+        
+        function submitChoice() {
+            if (answered) return;
+            
+            const selected = document.getElementById('submit-btn').dataset.selected;
+            const question = questions[currentQuestion];
+            const correctAnswer = question.answer;
+            
+            answered = true;
+            document.getElementById('submit-btn').disabled = true;
+            
+            const feedback = document.getElementById('feedback');
+            const explanation = document.getElementById('explanation');
+            
+            // 答案是索引格式 (0, 1, 2, 3)
+            if (selected === correctAnswer) {
+                score += 10;
+                feedback.textContent = '回答正确！+10分';
+                feedback.className = 'feedback correct show';
+            } else {
+                // 将索引转换为字母显示
+                const correctLetter = String.fromCharCode(65 + parseInt(correctAnswer));
+                feedback.textContent = '回答错误！正确答案是：' + correctLetter;
+                feedback.className = 'feedback wrong show';
+            }
+            
+            explanation.classList.add('show');
+            updateScore();
+            
+            // 如果是最后一题，显示重置按钮
+            if (currentQuestion === questions.length - 1) {
+                document.getElementById('reset-btn').classList.remove('hidden');
+            } else {
+                setTimeout(nextQuestion, 3000);
+            }
+        }
+        
+        function submitCalculation() {
+            if (answered) return;
+            
+            const userAnswer = document.getElementById('answer-input').value.trim();
+            const question = questions[currentQuestion];
+            const correctAnswer = question.answer;
+            
+            answered = true;
+            document.getElementById('submit-btn').disabled = true;
+            document.getElementById('answer-input').disabled = true;
+            
+            const feedback = document.getElementById('feedback');
+            const explanation = document.getElementById('explanation');
+            
+            if (userAnswer === correctAnswer) {
+                score += 10;
+                feedback.textContent = '回答正确！+10分';
+                feedback.className = 'feedback correct show';
+            } else {
+                feedback.textContent = '回答错误！正确答案是：' + correctAnswer;
+                feedback.className = 'feedback wrong show';
+            }
+            
+            explanation.classList.add('show');
+            updateScore();
+            
+            // 如果是最后一题，显示重置按钮
+            if (currentQuestion === questions.length - 1) {
+                document.getElementById('reset-btn').classList.remove('hidden');
+            } else {
+                setTimeout(nextQuestion, 3000);
+            }
+        }
+        
+        function nextQuestion() {
+            currentQuestion++;
+            loadQuestion();
+        }
+        
+        function updateScore() {
+            document.getElementById('current-score').textContent = score;
+        }
+        
+        function resetGame() {
+            currentQuestion = 0;
+            score = 0;
+            answered = false;
+            document.getElementById('reset-btn').classList.add('hidden');
+            updateScore();
+            loadQuestion();
+        }
+        
+        // 加载第一题
+        loadQuestion();
+    </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+[
+  {
+    "content": "[格式文件，暂不支持详细解析]",
+    "metadata": {
+      "source": "docx",
+      "type": ""
+    }
+  },
+  {
+    "content": "[格式文件，暂不支持详细解析]",
+    "metadata": {
+      "source": "docx",
+      "type": ""
+    }
+  },
+  {
+    "content": "TCP三次握手：连接建立的核心机制\n1. 核心流程\nTCP是面向连接的协议，在传输数据前必须通过三次握手建立可靠连接。\n1. 第一次握手：客户端发送SYN报文（seq=x），请求建立连接，客户端进入SYN_SENT状态。\n2. 第二次握手：服务端收到SYN，回复SYN+ACK报文。其中seq=y，ack=x+1；代表同意连接请求，同时向客户端发起连接请求，服务端进入SYN_RCVD状态。\n3. 第三次握手：客户端收到SYN+ACK，回复ACK报文，seq=x+1，ack=y+1。服务端收到ACK后，连接正式建立，双方进入ESTABLished状态。\n完整流程简写：Client(SYN, seq=x) → Server(SYN+ACK, seq=y, ack=x+1) → Client(ACK, seq=x+1, ack=y+1)\n2. seq 和 ack 规则\nseq：序列号，代表本次发送报文段数据的起始编号。\nack：确认号，代表期望收到对方下一个字节的序列号。\n核心计算公式：ack = 收到的seq + 1\n举例：客户端seq=100，服务端收到后ack=101。\n3. 报文标识含",
+    "metadata": {
+      "source": "TCP.docx",
+      "type": "docx"
+    }
+  },
+  {
+    "content": "= 收到的seq + 1\n举例：客户端seq=100，服务端收到后ack=101。\n3. 报文标识含义\nSYN：同步标志，用来发起连接请求，消耗一个序列号。\nACK：确认标志，用来确认收到报文。\nSYN+ACK：同步+确认，是第二次握手的报文。\n4. 为什么必须三次握手，不是两次？\n核心目的：\n1. 校验客户端、服务端双方的发送能力、接收能力都正常。\n2. 同步双方的初始序列号ISN。\n3. 防止网络中滞留的过期失效连接请求报文，让服务器错误建立无效连接，浪费服务器资源。\n5. 互动习题素材\n1. 单选题：TCP三次握手第二次握手的报文标志位是？\nA. SYN   B. ACK   C. SYN+ACK   D. FIN\n答案：C\n2. 计算题：客户端seq=200，服务端收到后ack等于多少？\n答案：201",
+    "metadata": {
+      "source": "TCP.docx",
+      "type": "docx"
+    }
+  }
+]

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多模态AI互动式教学智能体 - 锐捷网络教育信息化应用</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部导航 -->
+        <header class="header">
+            <div class="logo">
+                <h1>🎓 多模态AI互动式教学智能体</h1>
+                <p class="subtitle">锐捷网络・智能计算・应用类</p>
+            </div>
+            <nav class="nav">
+                <button class="nav-btn active" onclick="switchTab('chat')">智能对话</button>
+                <button class="nav-btn" onclick="switchTab('knowledge')">知识库管理</button>
+                <button class="nav-btn" onclick="switchTab('preview')">课件预览</button>
+            </nav>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="main-content">
+            <!-- 智能对话标签页 -->
+            <div id="chat-tab" class="tab-content active">
+                <div class="chat-container">
+                    <!-- 对话历史 -->
+                    <div class="chat-history" id="chat-history">
+                        <div class="message assistant">
+                            <div class="message-content">
+                                <p>👋 您好！我是您的AI教学助手。请告诉我您想要制作什么课件？</p>
+                                <p>您可以：</p>
+                                <ul>
+                                    <li>📝 直接输入教学主题（文字或语音）</li>
+                                    <li>📁 上传参考文档（PDF、Word、PPT、图片、视频）</li>
+                                    <li>💬 我会主动追问缺失信息，确保课件质量</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 输入区域 -->
+                    <div class="input-area">
+                        <div class="input-row">
+                            <input type="text" id="user-input" class="text-input" placeholder="请输入您的教学需求..." onkeypress="handleKeyPress(event)">
+                            <button class="voice-btn" onclick="startVoiceInput()" title="语音输入">🎤</button>
+                            <button class="send-btn" onclick="sendMessage()">发送</button>
+                        </div>
+                        <div class="rag-toggle-area">
+                            <label class="rag-toggle">
+                                <input type="checkbox" id="rag-enabled" checked>
+                                <span>启用知识库RAG</span>
+                            </label>
+                        </div>
+                        <div class="file-upload-area">
+                            <input type="file" id="file-input" multiple accept=".pdf,.docx,.pptx,.png,.jpg,.jpeg,.mp4,.avi,.mov" onchange="handleFileUpload(event)" style="display: none;">
+                            <button class="upload-btn" onclick="document.getElementById('file-input').click()">📁 上传参考文件（支持图片解析）</button>
+                            <span id="file-status" class="file-status"></span>
+                        </div>
+                        <div class="uploaded-files" id="uploaded-files"></div>
+                    </div>
+                </div>
+
+                <!-- 生成按钮 -->
+                <div class="action-area">
+                    <button class="generate-btn" onclick="generateCourseware()" id="generate-btn" disabled>🚀 生成课件</button>
+                </div>
+            </div>
+
+            <!-- 知识库管理标签页 -->
+            <div id="knowledge-tab" class="tab-content">
+                <div class="knowledge-container">
+                    <h2>📚 本地RAG知识库管理</h2>
+                    <div class="knowledge-upload">
+                        <input type="file" id="kb-file-input" multiple accept=".pdf,.docx,.pptx,.txt" onchange="handleKBUpload(event)" style="display: none;">
+                        <button class="upload-btn" onclick="document.getElementById('kb-file-input').click()">📤 上传教学资料到知识库</button>
+                    </div>
+                    <div class="kb-upload-progress" id="kb-upload-progress" style="display: none;">
+                        <p id="kb-upload-text">正在处理...</p>
+                    </div>
+                    <div class="knowledge-stats" id="knowledge-stats">
+                        <p>知识库文档数量：<span id="kb-count">0</span></p>
+                    </div>
+                    <div class="kb-documents-section">
+                        <h3>📄 已上传文档</h3>
+                        <div class="kb-documents" id="kb-documents">
+                            <p style="text-align: center; color: #999;">暂无文档</p>
+                        </div>
+                        <button class="clear-kb-btn" onclick="clearKnowledgeBase()">🗑️ 清空知识库</button>
+                    </div>
+                    <div class="knowledge-search">
+                        <input type="text" id="kb-search-input" class="search-input" placeholder="搜索知识库..." onkeypress="handleKBSearch(event)">
+                        <button class="search-btn" onclick="searchKnowledgeBase()">🔍 搜索</button>
+                    </div>
+                    <div class="knowledge-results" id="knowledge-results"></div>
+                </div>
+            </div>
+
+            <!-- 课件预览标签页 -->
+            <div id="preview-tab" class="tab-content">
+                <div class="preview-container">
+                    <h2>📄 课件预览与导出</h2>
+                    <div class="preview-tabs">
+                        <button class="preview-tab-btn active" onclick="switchPreview('ppt')">PPT课件</button>
+                        <button class="preview-tab-btn" onclick="switchPreview('word')">Word教案</button>
+                        <button class="preview-tab-btn" onclick="switchPreview('game')">互动游戏</button>
+                    </div>
+                    
+                    <!-- PPT预览 -->
+                    <div id="ppt-preview" class="preview-content active">
+                        <div class="preview-placeholder" id="ppt-placeholder">
+                            <p>📊 PPT课件尚未生成</p>
+                            <p>请先在"智能对话"中生成课件</p>
+                        </div>
+                        <div class="preview-content-area" id="ppt-content" style="display: none;">
+                            <div class="ppt-slides" id="ppt-slides"></div>
+                        </div>
+                        <div class="export-area" id="ppt-export" style="display: none;">
+                            <button class="export-btn" onclick="downloadPPT()">⬇️ 下载PPTX</button>
+                        </div>
+                    </div>
+
+                    <!-- Word预览 -->
+                    <div id="word-preview" class="preview-content">
+                        <div class="preview-placeholder" id="word-placeholder">
+                            <p>📝 Word教案尚未生成</p>
+                            <p>请先在"智能对话"中生成课件</p>
+                        </div>
+                        <div class="preview-content-area" id="word-content" style="display: none;">
+                            <div class="word-text" id="word-text"></div>
+                        </div>
+                        <div class="export-area" id="word-export" style="display: none;">
+                            <button class="export-btn" onclick="downloadWord()">⬇️ 下载Word</button>
+                        </div>
+                    </div>
+
+                    <!-- 游戏预览 -->
+                    <div id="game-preview" class="preview-content">
+                        <div class="preview-placeholder" id="game-placeholder">
+                            <p>🎮 互动游戏尚未生成</p>
+                            <p>请先在"智能对话"中生成课件</p>
+                        </div>
+                        <div class="preview-content-area" id="game-content" style="display: none;">
+                            <iframe id="game-iframe" class="game-iframe"></iframe>
+                        </div>
+                        <div class="export-area" id="game-export" style="display: none;">
+                            <button class="export-btn" onclick="downloadGame()">⬇️ 下载游戏HTML</button>
+                        </div>
+                    </div>
+
+                    <!-- 迭代优化区域 -->
+                    <div class="iteration-area">
+                        <h3>🔄 迭代优化</h3>
+                        <div class="iteration-input">
+                            <input type="text" id="iteration-input" class="text-input" placeholder="输入修改意见，如：增加案例、简化内容、调整顺序..." onkeypress="handleIterationKeyPress(event)">
+                            <button class="iteration-btn" onclick="iterateCourseware()">应用修改</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 加载提示 -->
+        <div class="loading-overlay" id="loading-overlay" style="display: none;">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">正在处理中，请稍候...</p>
+        </div>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
