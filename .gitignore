@@ -1,0 +1,12 @@
+﻿# 密钥
+.env
+# Python缓存
+__pycache__/
+*.pyc
+*.pyo
+# 生成输出文件 ppt docx html
+backend/outputs/
+# 用户上传素材
+backend/uploads/
+# 日志
+*.log
